@@ -1,0 +1,53 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: romm
+  name: romm
+  namespace: romm
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: romm
+  template:
+    metadata:
+      labels:
+        app: romm
+    spec:
+      containers:
+        - image: rommapp/romm:latest
+          name: romm
+          imagePullPolicy: IfNotPresent
+          env:
+            - name: DB_HOST
+              value: romm-mysql
+            - name: DB_NAME
+              value: romm
+            - name: DB_USER
+              value: romm-user
+            - name: DB_PASSWD
+              value: welcome1
+            - name: ROMM_AUTH_SECRET_KEY
+              value: 
+            - name: IGDB_CLIENT_ID
+              value: 
+            - name: IGDB_CLIENT_SECRET
+              value: 
+            - name: MOBYGAMES_API_KEY
+              value: 
+            - name: STEAMGRIDDB_API_KEY
+              value: 
+          volumeMounts:
+          - mountPath: /romm/
+            name: romm
+          # - mountPath: /redis-data
+          #   name: redis
+      volumes:
+        - name: romm
+          persistentVolumeClaim:
+            claimName: romm-pv-claim
+        # - name: redis
+        #   persistentVolumeClaim:
+        #     claimName: romm-redis-pv-claim
+          

@@ -1,0 +1,77 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: romm-mysql
+  namespace: romm
+  labels:
+    app: romm
+spec:
+  ports:
+    - port: 3306
+  selector:
+    app: romm
+    tier: mysql
+  clusterIP: None
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: romm-mysql-pv-claim
+  namespace: romm
+  labels:
+    app: romm
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 20Gi
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: romm-mysql
+  namespace: romm
+  labels:
+    app: romm
+spec:
+  selector:
+    matchLabels:
+      app: romm
+      tier: mysql
+  strategy:
+    type: Recreate
+  template:
+    metadata:
+      labels:
+        app: romm
+        tier: mysql
+    spec:
+      containers:
+      - image: mariadb:latest
+        name: mysql
+        env:
+        - name: MYSQL_ROOT_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: mysql-pass
+              key: password
+        - name: MYSQL_DATABASE
+          value: romm
+        - name: MYSQL_USER
+          value: romm-user
+        - name: MYSQL_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: mysql-pass
+              key: password
+        ports:
+        - containerPort: 3306
+          name: mysql
+        volumeMounts:
+        - name: romm-mysql-persistent-storage
+          mountPath: /var/lib/mysql
+      volumes:
+      - name: romm-mysql-persistent-storage
+        persistentVolumeClaim:
+          claimName: romm-mysql-pv-claim
